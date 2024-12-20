@@ -66,6 +66,8 @@ public:
     void draw(MultiPolygon& mpg);
     void draw(GeometryCollection& cl);
 
+    unsigned char* imageData(size_t& len) ;
+
 protected:
     void drawGrid();
 

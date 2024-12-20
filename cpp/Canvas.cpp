@@ -4,6 +4,9 @@
 #include <malloc.h>
 #include <math.h>
 #include <iostream>
+#include <mapsymbol/SSystemLine.h>
+#include <mapsymbol/SShape.h>
+#include <mapsymbol/SurfaceHelper.h>
 
 using namespace geos::io;
 using namespace geos::geom;
@@ -326,14 +329,36 @@ void MapCanvas::draw(Point& pt)
 void MapCanvas::draw(LineString& ls)
 {
     cairo_save(_cairo);
+
+    cairo_new_path(_cairo);
+
     std::unique_ptr<Point> pt = ls.getPointN(0);
     cairo_move_to(_cairo,pt->getX(), pt->getY());
-    for(size_t i=0; i<ls.getNumPoints(); i++){
+    for(size_t i=1; i<ls.getNumPoints(); i++){
         pt = ls.getPointN(i);
         cairo_line_to(_cairo, pt->getX(),pt->getY());
     }
-    cairo_set_source_rgba(_cairo,0,0,0,1);
-    cairo_stroke(_cairo);
+
+    for(size_t i=0; i<_defaultLineSymbol.nShapes(); i++){
+        SShape *shp = _defaultLineSymbol.getShape(i);
+        if(shp->type() == SShape::SYSTEM_LINE){
+            SSystemLine *sysline = (SSystemLine*)shp;
+            SStroke *stroke = sysline->stroke();
+            cairo_set_line_width(_cairo,stroke->width());
+            cairo_set_line_cap(_cairo,stroke->cairoCap());
+            cairo_set_line_join(_cairo, stroke->cairoJoin());
+            cairo_set_miter_limit(_cairo, stroke->miter());
+            SColor color = stroke->color();
+            cairo_set_source_rgba(_cairo,color.red()/255.0, color.green()/255.0,color.blue()/255.0,color.alpha()/255.0);
+            double* dash = new double[stroke->dashes().size()];
+            for(size_t j=0; j<stroke->dashes().size(); j++){
+                dash[j] = stroke->dashes()[j];
+            }
+            cairo_set_dash(_cairo,dash,stroke->dashes().size(),stroke->dashOffset());
+            cairo_stroke_preserve(_cairo);
+        }
+    }
+    cairo_new_path(_cairo);
     cairo_restore(_cairo);
 }
 
@@ -360,6 +385,11 @@ void MapCanvas::draw(MultiPolygon& mpg)
 void MapCanvas::draw(GeometryCollection& cl)
 {
 
+}
+
+unsigned char* MapCanvas::imageData(size_t& len)
+{
+    return SurfaceHelper::pngRawDataFromSurface(_surface, len);
 }
 
 void MapCanvas::drawGrid()

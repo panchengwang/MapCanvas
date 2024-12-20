@@ -10,7 +10,7 @@ int main(int argc, char** argv){
     gettimeofday(&start, NULL);
 
     MapCanvas canvas;
-    canvas.setDotsPerMM(144/25.4);
+    canvas.setDotsPerMM(600/25.4);
     canvas.setCenter(0,0);
     canvas.setWidth(360);
     canvas.setHeight(180);
@@ -19,8 +19,13 @@ int main(int argc, char** argv){
         canvas.draw("POINT(0 0)");
     }
     canvas.draw("LINESTRING(-180 0, 180 0)");
+    canvas.draw("LINESTRING(0 -90, 0 90)");
     canvas.end();
-    canvas.saveToFile("a.png");
+    // canvas.saveToFile("a.png");
+
+    // size_t len;
+    // unsigned char* data = canvas.imageData(len);
+    // delete [] data;
 
     struct timeval end;
     gettimeofday(&end, NULL);
